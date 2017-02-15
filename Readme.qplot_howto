@@ -1,0 +1,58 @@
+
+This is an IDL program for looking at and redshift-checking
+Hectospec spectra.  To install, make a directory like ~/idl/qplot
+and untar it in that directory.  To run it, the command is like:
+
+cd, '2013.0508'
+qplot2,'reduction/0000/spHect-2013.0508.fits',xrange=[3700,8800],/dosnr,$
+        /plugmap,$
+        nsmooth=11,spzbest='spZall-2013.0508.fits',$
+        catalog='plugdir/NSA147100_1_cat'
+
+The spHect and spZall files are products of HSRED.  Specifically,
+the spHect file has extracted spectra made by hs_extract, and the spZall 
+has results of redshift fitting from hs_reduce1d.  I run commands
+like this to reduce a configuration:
+
+.r /home/bjw/idl/hsred/new_hs_readcat
+hs_preproc
+hs_calibproc, /doall
+cat='./plugdir/NSA147100_1_cat'
+cols = ['beam','ra','dec','rmag','fiber','rank','id']
+format= ['L','D','D','D','L','L','A']
+mapfile='NSA147100_1.2117_map'
+hs_readcat,cat,mapfile,cols,format
+files = findfile('NSA147100*.fits')
+hs_extract, files,plugfile='./plugdir/NSA147100_1',/plugcat,$
+ /uberextract, outname='2013.0508.fits'
+hs_reduce1d,'/data3/bjw/hecto_2013/2013.0508/reduction/0000/spHect-2013.0508.fits'
+
+The plugmap/plugdir cat file is something that was necessary for
+earlier versions of HSRED to run.  It has columns:
+  aperture, ra, dec, mag, fiber, beam, id
+(not all of which are strictly necessary for qplot2).
+
+I have a perl script that I run to make these files for each config;
+HSRED v2 may do something similar itself. You could try running
+qplot2 without the catalog argument, just to see how it works,
+as it's mostly using that to display the ID and magnitude.
+
+It uses keystrokes to do things - type '?' for a list. 
+There are many commands, of which I use only a few.
+Try ] to show locations of lines, enter for forward, p for previous.
+to grade the spectrum, type quality 1-4, hit enter, hit enter again to move
+to next.  I grade them like
+  4 is certain, 3 is fairly good (95% conf or better), 2 is dubious
+  (don't use for science, but worth keeping around or having someone else
+  check it), 1 is junk.
+n to switch template fits - it gives a list of candidate redshifts, pick one
+  by number
+y to change y plot limits
+z or a allows inputting a redshift to try
+q saves and quits
+You can quit and restart qplot2 and it will reread your previous
+classifications.  It also writes an autosave/backup file.
+You'll get an output text file named something like
+  reduction/0000/spHect-2013.0508.zlog
+Copy this somewhere so it doesn't get overwritten.
+
