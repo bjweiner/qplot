@@ -402,11 +402,22 @@ openu, lun, bkpfile,/get_lun,/append
       endif
       print, ' zplot, z in qcat ', z_choice, qcat[i].z, qcat[i].zq
 
-;Mask pixels were the ivar is lt 0.6 the smoothed value
+;Mask pixels where the ivar is lt 0.6 the smoothed value
+;newmask is set to 1 where the array/smooth is low (ie a local spike in variance)
       temp = ivar[*,i] / smooth(ivar[*,i], 21)
       newmask = temp lt clipfact
-      
+
+; Trap and mask pixels where the spectrum is NaN - BJW, 7/23/2019
+      isnan = where(finite(object[*,i], /nan), icount)
+      if icount ge 1 then mask[isnan,i] = mask[isnan,i] + 1
+
+; What this does: min() sets pix to the subscript of the minimum
+; element, eg the pixel nearest 5588 A
+
       junk = min(abs(lam[*,i]-5588),pix)
+
+; mask near the line has newmask added to it, ie we only use newmask
+; near the locations of known sky lines.
 
       mask[(pix-10):(pix+10),i]=mask[(pix-10):(pix+10),i]+$
         newmask[(pix-10):(pix+10)]
